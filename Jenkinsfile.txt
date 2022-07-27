@@ -1,0 +1,47 @@
+pipeline {
+    agent any
+    stages {
+        stage("checkout") {
+            steps {
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Ashlesh12342/pythonDjango.git']]])
+            }
+        }
+        
+        stage("creating virtual env") {
+            
+            steps {
+                
+                withEnv(['PYTHON_HOME=/usr/bin/python3']) {
+                    sh "$PYTHON_HOME -V"
+                    sh "$PYTHON_HOME -m venv myenv"
+                    sh ". myenv/bin/activate"
+                    sh "pip install -r requirement.txt"
+                }
+                // sh "pip install -r requirements.txt"
+            }
+        }
+        stage("unit testing"){
+            steps {
+                //sh ". myenv/bin/activate"
+                sh "python3 -m pytest tests/test_api.py --junitxml=output.xml"
+                // sh "python3 -m pytest caltests.py --html=report.html"
+            }
+        }
+        
+        stage("static code analysis") {
+           environment {
+               scannerhome=tool 'sonar-scanner'
+           }
+           steps {
+               script {
+                   withSonarQubeEnv('sonarqube') {
+
+                        sh '${scannerhome}/bin/sonar-scanner'
+
+                    }
+               }
+           }
+        }
+        
+    }
+}
