@@ -1,5 +1,10 @@
+def img
 pipeline {
-    agent any
+    agent {label 'slave'}
+     environment {
+        registry="614566190192.dkr.ecr.us-east-1.amazonaws.com/themuskrepo"
+        dockerImage=""
+    }
     stages {
         stage("checkout") {
             steps {
@@ -23,25 +28,45 @@ pipeline {
         stage("unit testing"){
             steps {
                 //sh ". myenv/bin/activate"
+                
                 sh "python3 -m pytest tests/test_api.py --junitxml=output.xml"
                 // sh "python3 -m pytest caltests.py --html=report.html"
+            
             }
         }
         
         stage("static code analysis") {
-           environment {
+          environment {
                scannerhome=tool 'sonar-scanner'
            }
            steps {
                script {
                    withSonarQubeEnv('sonarqube') {
 
-                        sh '${scannerhome}/bin/sonar-scanner'
+                         sh '${scannerhome}/bin/sonar-scanner'
 
-                    }
+                     }
                }
            }
+         }
+
+         stage("build image") {
+            steps {
+                script {
+                    img=registry 
+                    dockerImage=docker.build("${img}")
+                }
+            }
+        }
+
+        stage("push to ECR") {
+            steps {
+                script {
+                    sh "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 614566190192.dkr.ecr.us-east-1.amazonaws.com"
+                    sh "docker push 614566190192.dkr.ecr.us-east-1.amazonaws.com/themuskrepo:latest"
+                    }
+                }
+            }
         }
         
     }
-}
