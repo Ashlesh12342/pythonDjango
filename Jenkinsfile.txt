@@ -1,14 +1,15 @@
 def img
 pipeline {
-    agent {label 'slave'}
-     environment {
-        registry="614566190192.dkr.ecr.us-east-1.amazonaws.com/themuskrepo"
+    agent any
+    environment {
+        registry="614566190192.dkr.ecr.us-east-1.amazonaws.com/myecr"
         dockerImage=""
     }
     stages {
         stage("checkout") {
             steps {
                 checkout([$class: 'GitSCM', branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Ashlesh12342/pythonDjango.git']]])
+                
             }
         }
         
@@ -29,7 +30,7 @@ pipeline {
             steps {
                 //sh ". myenv/bin/activate"
                 
-                sh "python3 -m pytest tests/test_api.py --junitxml=output.xml"
+                sh "python3 -m pytest --junitxml=output.xml"
                 // sh "python3 -m pytest caltests.py --html=report.html"
             
             }
@@ -49,8 +50,14 @@ pipeline {
                }
            }
          }
-
-         stage("build image") {
+         
+         stage("Quality Gate") {
+            steps {
+             waitForQualityGate abortPipeline: true, credentialsId: 'sonarqube'
+            }
+          }
+          
+          stage("build image") {
             steps {
                 script {
                     img=registry 
@@ -58,15 +65,22 @@ pipeline {
                 }
             }
         }
-
+        
         stage("push to ECR") {
             steps {
                 script {
                     sh "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 614566190192.dkr.ecr.us-east-1.amazonaws.com"
-                    sh "docker push 614566190192.dkr.ecr.us-east-1.amazonaws.com/themuskrepo:latest"
+                    sh "docker push 614566190192.dkr.ecr.us-east-1.amazonaws.com/myecr:latest"
                     }
                 }
+            }
+            
+        stage("Deploy"){
+            steps{
+                sh "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 614566190192.dkr.ecr.us-east-1.amazonaws.com"
+                sh "docker run -d -p 8000:8000 614566190192.dkr.ecr.us-east-1.amazonaws.com/myecr:latest"
             }
         }
         
     }
+}
