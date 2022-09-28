@@ -1,0 +1,51 @@
+
+pipeline {
+    agent any
+    tools {
+        terraform 'Terraform'
+    }
+    stages {
+        stage("checkout") {
+         steps {
+           checkout([$class: 'GitSCM', branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[credentialsId: 'Github', url: 'https://github.com/OutfrontUS/ALM_Infrastructure.git']]])
+         }
+        }
+
+        
+        stage("init") {
+            steps {
+                sh '''
+                    export AWS_ACCESS_KEY_ID="ASIAQANA2FMQND2POYY4"
+                    export AWS_SECRET_ACCESS_KEY="3NUmd2vRO74s/4PtOO+YBJHzMMsZHHPheO39L4MS"
+                    export AWS_SESSION_TOKEN="IQoJb3JpZ2luX2VjEHMaCXVzLWVhc3QtMSJGMEQCICej2JQqI7ePSvTNeflNbpmzJi0A9NeILatWHbip3wvPAiBMc981ocVXBjxoPsIjKhbxUSH6b0wHtFmir6A9dtAsvCqDAwgrEAAaDDAwMDg3NDEzMDIwOCIMuZld4a5wXN5acZckKuACxGIUNog5w2/yM2G/FEnEp5NUZRpFklxbenhIbu3m3+tjq7Jo+5IQE99bvtv5Bs+8pIGvc7T0Ules8NEothhfVpNx3ngcfRrxkArNCFF6idX/Spn0GquIVL3KBkqJzuXlhzl7AbkAIr7zltgdhhxNgxBcDtoNU9bi7Pemu17dVa7BqVAe4/k03PIS4/o/A+6ceh87v7ehsApExOz/8D5aQqcSyh0rcoeyZ3mjzPyLgi3KNJPVANFwgZZoDuLVWVFcShEa8gr0llo2tN776QOTHrHhNbZ9cEUmSBt58oPhc8P2BaLhAn7kTNCN5aodIcsFTM5X5tFImoQY/2JCM3KkDqWHAynTe+FwN/gLyAVNujcJ/46/mvrcRMroR4c95GyIdpNdzagdWI/xYy/JJGS1+u+HC8+RYmBTjIwi+fM9y30lxS6cRXs2FiAlDyXuE1F6d7f+rrczfBS0AJFn3o89djCTvtCZBjqoAZdpFvebAzYAAlMc+Wl3IeqhM3vemv7LErSdjv2PR4o4PhXOFvxe1WJqfBi6w3behC5aSigWMmbBnwP0FfjprwwRKWCH6s53zQcArihC1b3zhqSg6w6SvmAy9TuquFmhwMkgN4cSGl39tZ8zfkeZbDpumkN/D1EhOFPaAAP8NyeHkvafmlaZqeqPwY7He/qYZ2U5sPhRsOwUwyx0UMP5RwVlvLRsQIdizg=="
+
+                    aws s3 cp s3://middlewarepreprodinfrastructurebucket/terraform.tfstate /var/lib/jenkins/workspace/Middleware-Preprod-Infrastructure-Pipeline
+                    terraform init
+                   '''
+                 
+            }
+        }
+
+        stage("Plan and Apply") {
+            steps {
+                sh '''
+                      export AWS_ACCESS_KEY_ID="ASIAQANA2FMQND2POYY4"
+                      export AWS_SECRET_ACCESS_KEY="3NUmd2vRO74s/4PtOO+YBJHzMMsZHHPheO39L4MS"
+                      export AWS_SESSION_TOKEN="IQoJb3JpZ2luX2VjEHMaCXVzLWVhc3QtMSJGMEQCICej2JQqI7ePSvTNeflNbpmzJi0A9NeILatWHbip3wvPAiBMc981ocVXBjxoPsIjKhbxUSH6b0wHtFmir6A9dtAsvCqDAwgrEAAaDDAwMDg3NDEzMDIwOCIMuZld4a5wXN5acZckKuACxGIUNog5w2/yM2G/FEnEp5NUZRpFklxbenhIbu3m3+tjq7Jo+5IQE99bvtv5Bs+8pIGvc7T0Ules8NEothhfVpNx3ngcfRrxkArNCFF6idX/Spn0GquIVL3KBkqJzuXlhzl7AbkAIr7zltgdhhxNgxBcDtoNU9bi7Pemu17dVa7BqVAe4/k03PIS4/o/A+6ceh87v7ehsApExOz/8D5aQqcSyh0rcoeyZ3mjzPyLgi3KNJPVANFwgZZoDuLVWVFcShEa8gr0llo2tN776QOTHrHhNbZ9cEUmSBt58oPhc8P2BaLhAn7kTNCN5aodIcsFTM5X5tFImoQY/2JCM3KkDqWHAynTe+FwN/gLyAVNujcJ/46/mvrcRMroR4c95GyIdpNdzagdWI/xYy/JJGS1+u+HC8+RYmBTjIwi+fM9y30lxS6cRXs2FiAlDyXuE1F6d7f+rrczfBS0AJFn3o89djCTvtCZBjqoAZdpFvebAzYAAlMc+Wl3IeqhM3vemv7LErSdjv2PR4o4PhXOFvxe1WJqfBi6w3behC5aSigWMmbBnwP0FfjprwwRKWCH6s53zQcArihC1b3zhqSg6w6SvmAy9TuquFmhwMkgN4cSGl39tZ8zfkeZbDpumkN/D1EhOFPaAAP8NyeHkvafmlaZqeqPwY7He/qYZ2U5sPhRsOwUwyx0UMP5RwVlvLRsQIdizg=="
+                      terraform plan 
+                '''
+                // sh "terraform apply -auto-approve"
+            }
+        }
+    }
+}
+
+
+
+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
+
+var/lib/jenkins/workspace/
+
+http://34.225.119.224:8080/job/Middleware-Preprod-Infrastructure-Pipeline/2/ws/#:~:text=/var/lib/jenkins/workspace/Middleware%2DPreprod%2DInfrastructur
+
+/var/lib/jenkins/workspace/Middleware-Preprod-Infrastructure-Pipeline
